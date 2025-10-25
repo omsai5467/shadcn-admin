@@ -1,4 +1,170 @@
-import { createFileRoute } from '@tanstack/react-router'
+function EditListDialog({ list, onUpdate }: any) {
+  const [open, setOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    name: list.name,
+    description: list.description,
+    tags: list.tags,
+  })
+  const [tagSearch, setTagSearch] = useState('')
+
+  const predefinedTags = ['Newsletter', 'Product', 'Launch', 'Beta', 'Testing', 'Marketing', 'Sales', 'Support', 'VIP', 'Active']
+
+  const filteredPredefinedTags = predefinedTags.filter(tag =>
+    tag.toLowerCase().includes(tagSearch.toLowerCase()) && !formData.tags.includes(tag)
+  )
+
+  const removeTag = (tag: string) => {
+    setFormData({ ...formData, tags: formData.tags.filter((t: string) => t !== tag) })
+  }
+
+  const handleUpdate = () => {
+    if (formData.name.trim()) {
+      onUpdate(list.id, formData)
+      setOpen(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          className="hover:bg-primary/10 hover:text-primary hover:border-primary transition-all"
+        >
+          <Edit className="w-3.5 h-3.5" />
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+            <Edit className="w-5 h-5 text-primary" />
+            Edit Contact List
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="mt-6 space-y-4">
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              List Name
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={3}
+              className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Tags
+            </label>
+
+            <div className="mb-3">
+              <div className="flex gap-2 mb-2">
+                <div className="relative flex-1">
+                  <TagIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search or add custom tag..."
+                    value={tagSearch}
+                    onChange={(e) => setTagSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && tagSearch.trim()) {
+                        e.preventDefault()
+                        if (!formData.tags.includes(tagSearch.trim())) {
+                          setFormData({ ...formData, tags: [...formData.tags, tagSearch.trim()] })
+                        }
+                        setTagSearch('')
+                      }
+                    }}
+                    className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    if (tagSearch.trim() && !formData.tags.includes(tagSearch.trim())) {
+                      setFormData({ ...formData, tags: [...formData.tags, tagSearch.trim()] })
+                      setTagSearch('')
+                    }
+                  }}
+                  size="sm"
+                  disabled={!tagSearch.trim()}
+                >
+                  Add
+                </Button>
+              </div>
+
+              {filteredPredefinedTags.length > 0 && (
+                <div className="mb-2">
+                  <p className="text-xs text-muted-foreground mb-2">Suggested tags:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {filteredPredefinedTags.map(tag => {
+                      const color = getTagColor(tag)
+                      return (
+                        <Badge
+                          key={tag}
+                          className={`cursor-pointer ${color.bg} ${color.text} border ${color.border} hover:opacity-80 transition-opacity`}
+                          onClick={() => {
+                            setFormData({ ...formData, tags: [...formData.tags, tag] })
+                            setTagSearch('')
+                          }}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          {tag}
+                        </Badge>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map((tag: string) => {
+                  const color = getTagColor(tag)
+                  return (
+                    <Badge
+                      key={tag}
+                      className={`gap-1.5 ${color.bg} ${color.text} border ${color.border}`}
+                    >
+                      {tag}
+                      <X className="w-3 h-3 cursor-pointer hover:opacity-70" onClick={() => removeTag(tag)} />
+                    </Badge>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <Button
+            onClick={handleUpdate}
+            disabled={!formData.name.trim()}
+            className="w-full bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
+          >
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            Save Changes
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}import { createFileRoute } from '@tanstack/react-router'
 import { Header } from '@/components/layout/header.tsx'
 import { Search } from '@/components/search.tsx'
 import { ThemeSwitch } from '@/components/theme-switch.tsx'
@@ -33,7 +199,10 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  AlertTriangle
+  AlertTriangle,
+  LayoutGrid,
+  List as ListIcon,
+  Tag as TagIcon
 } from 'lucide-react'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -84,10 +253,12 @@ function RouteComponent() {
 
   const [search, setSearch] = useState('')
   const [selectedList, setSelectedList] = useState(null)
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
 
   const filteredLists = contactLists.filter((list) =>
     list.name.toLowerCase().includes(search.toLowerCase()) ||
-    list.description.toLowerCase().includes(search.toLowerCase())
+    list.description.toLowerCase().includes(search.toLowerCase()) ||
+    list.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()))
   )
 
   const addContactList = (listData: any) => {
@@ -164,7 +335,28 @@ function RouteComponent() {
                 Organize and manage your email contact lists
               </p>
             </div>
-            <AddContactListDialog onAdd={addContactList} />
+            <div className="flex items-center gap-3">
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-muted rounded-lg p-1">
+                <Button
+                  size="sm"
+                  variant={viewMode === 'card' ? 'default' : 'ghost'}
+                  onClick={() => setViewMode('card')}
+                  className="px-3"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  onClick={() => setViewMode('list')}
+                  className="px-3"
+                >
+                  <ListIcon className="w-4 h-4" />
+                </Button>
+              </div>
+              <AddContactListDialog onAdd={addContactList} />
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -189,7 +381,7 @@ function RouteComponent() {
             />
           </div>
 
-          {/* Contact Lists Grid */}
+          {/* Contact Lists Grid/List */}
           <AnimatePresence mode="popLayout">
             {filteredLists.length === 0 ? (
               <motion.div
@@ -204,7 +396,7 @@ function RouteComponent() {
                   Create your first contact list to start sending campaigns
                 </p>
               </motion.div>
-            ) : (
+            ) : viewMode === 'card' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredLists.map((list, index) => (
                   <ContactListCard
@@ -217,6 +409,13 @@ function RouteComponent() {
                   />
                 ))}
               </div>
+            ) : (
+              <ContactListTable
+                lists={filteredLists}
+                onDelete={deleteList}
+                onView={setSelectedList}
+                onUpdate={updateList}
+              />
             )}
           </AnimatePresence>
         </div>
@@ -246,6 +445,22 @@ function generateContacts(count: number) {
   }
 
   return contacts
+}
+
+const TAG_COLORS = [
+  { bg: 'bg-blue-500/20', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-500/30' },
+  { bg: 'bg-purple-500/20', text: 'text-purple-700 dark:text-purple-400', border: 'border-purple-500/30' },
+  { bg: 'bg-pink-500/20', text: 'text-pink-700 dark:text-pink-400', border: 'border-pink-500/30' },
+  { bg: 'bg-orange-500/20', text: 'text-orange-700 dark:text-orange-400', border: 'border-orange-500/30' },
+  { bg: 'bg-teal-500/20', text: 'text-teal-700 dark:text-teal-400', border: 'border-teal-500/30' },
+  { bg: 'bg-indigo-500/20', text: 'text-indigo-700 dark:text-indigo-400', border: 'border-indigo-500/30' },
+  { bg: 'bg-cyan-500/20', text: 'text-cyan-700 dark:text-cyan-400', border: 'border-cyan-500/30' },
+  { bg: 'bg-rose-500/20', text: 'text-rose-700 dark:text-rose-400', border: 'border-rose-500/30' },
+]
+
+function getTagColor(tag: string) {
+  const hash = tag.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return TAG_COLORS[hash % TAG_COLORS.length]
 }
 
 function StatsCard({ icon, label, value, color }: any) {
@@ -311,11 +526,17 @@ function ContactListCard({ list, index, onDelete, onView, onUpdate }: any) {
 
           {/* Tags */}
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {list.tags.map((tag: string) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
+            {list.tags.map((tag: string) => {
+              const color = getTagColor(tag)
+              return (
+                <Badge
+                  key={tag}
+                  className={`text-xs ${color.bg} ${color.text} border ${color.border}`}
+                >
+                  {tag}
+                </Badge>
+              )
+            })}
           </div>
 
           {/* Stats */}
@@ -369,6 +590,105 @@ function ContactListCard({ list, index, onDelete, onView, onUpdate }: any) {
         </div>
       </div>
     </motion.div>
+  )
+}
+
+function ContactListTable({ lists, onDelete, onView, onUpdate }: any) {
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-lg">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-muted/50 border-b border-border">
+          <tr>
+            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Name</th>
+            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Tags</th>
+            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Contacts</th>
+            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Valid Rate</th>
+            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Created</th>
+            <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          {lists.map((list: any, index: number) => {
+            const validPercentage = Math.round((list.validEmails / list.totalContacts) * 100)
+            return (
+              <motion.tr
+                key={list.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Users className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{list.name}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{list.description}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-wrap gap-1.5">
+                    {list.tags.map((tag: string) => {
+                      const color = getTagColor(tag)
+                      return (
+                        <Badge
+                          key={tag}
+                          className={`text-xs ${color.bg} ${color.text} border ${color.border}`}
+                        >
+                          {tag}
+                        </Badge>
+                      )
+                    })}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                    <span className="text-sm font-bold text-primary">
+                      {list.totalContacts.toLocaleString()}
+                    </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-muted rounded-full h-2 max-w-[100px]">
+                      <div
+                        className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${validPercentage}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                        {validPercentage}%
+                      </span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">
+                  {list.createdAt}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onView(list)}
+                      className="hover:bg-primary/10 hover:text-primary hover:border-primary transition-all"
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1.5" />
+                      View
+                    </Button>
+                    <EditListDialog list={list} onUpdate={onUpdate} />
+                    <DeleteListDialog list={list} onDelete={onDelete} />
+                  </div>
+                </td>
+              </motion.tr>
+            )
+          })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 
@@ -556,6 +876,13 @@ function AddContactListDialog({ onAdd }: any) {
   const [currentTag, setCurrentTag] = useState('')
   const [importMethod, setImportMethod] = useState<'csv' | 'text'>('csv')
   const [textInput, setTextInput] = useState('')
+  const [tagSearch, setTagSearch] = useState('')
+
+  const predefinedTags = ['Newsletter', 'Product', 'Launch', 'Beta', 'Testing', 'Marketing', 'Sales', 'Support', 'VIP', 'Active']
+
+  const filteredPredefinedTags = predefinedTags.filter(tag =>
+    tag.toLowerCase().includes(tagSearch.toLowerCase()) && !formData.tags.includes(tag)
+  )
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -662,25 +989,86 @@ function AddContactListDialog({ onAdd }: any) {
             <label className="text-sm font-medium text-foreground mb-2 block">
               Tags
             </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                placeholder="Add tag..."
-                value={currentTag}
-                onChange={(e) => setCurrentTag(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                className="flex-1 px-4 py-2 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-              />
-              <Button onClick={addTag} size="sm">Add</Button>
+
+            {/* Tag Input with Search */}
+            <div className="mb-3">
+              <div className="flex gap-2 mb-2">
+                <div className="relative flex-1">
+                  <TagIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search or add custom tag..."
+                    value={tagSearch}
+                    onChange={(e) => setTagSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && tagSearch.trim()) {
+                        e.preventDefault()
+                        if (!formData.tags.includes(tagSearch.trim())) {
+                          setFormData({ ...formData, tags: [...formData.tags, tagSearch.trim()] })
+                        }
+                        setTagSearch('')
+                      }
+                    }}
+                    className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    if (tagSearch.trim() && !formData.tags.includes(tagSearch.trim())) {
+                      setFormData({ ...formData, tags: [...formData.tags, tagSearch.trim()] })
+                      setTagSearch('')
+                    }
+                  }}
+                  size="sm"
+                  disabled={!tagSearch.trim()}
+                >
+                  Add
+                </Button>
+              </div>
+
+              {/* Predefined Tags */}
+              {filteredPredefinedTags.length > 0 && (
+                <div className="mb-2">
+                  <p className="text-xs text-muted-foreground mb-2">Suggested tags:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {filteredPredefinedTags.map(tag => {
+                      const color = getTagColor(tag)
+                      return (
+                        <Badge
+                          key={tag}
+                          className={`cursor-pointer ${color.bg} ${color.text} border ${color.border} hover:opacity-80 transition-opacity`}
+                          onClick={() => {
+                            setFormData({ ...formData, tags: [...formData.tags, tag] })
+                            setTagSearch('')
+                          }}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          {tag}
+                        </Badge>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map(tag => (
-                <Badge key={tag} variant="secondary" className="gap-1">
-                  {tag}
-                  <X className="w-3 h-3 cursor-pointer" onClick={() => removeTag(tag)} />
-                </Badge>
-              ))}
-            </div>
+
+            {/* Selected Tags */}
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map(tag => {
+                  const color = getTagColor(tag)
+                  return (
+                    <Badge
+                      key={tag}
+                      className={`gap-1.5 ${color.bg} ${color.text} border ${color.border}`}
+                    >
+                      {tag}
+                      <X className="w-3 h-3 cursor-pointer hover:opacity-70" onClick={() => removeTag(tag)} />
+                    </Badge>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Import Method Toggle */}
@@ -950,116 +1338,6 @@ function AddContactsToListDialog({ list, onUpdate }: any) {
   )
 }
 
-function EditListDialog({ list, onUpdate }: any) {
-  const [open, setOpen] = useState(false)
-  const [formData, setFormData] = useState({
-    name: list.name,
-    description: list.description,
-    tags: list.tags,
-  })
-  const [currentTag, setCurrentTag] = useState('')
-
-  const addTag = () => {
-    if (currentTag.trim() && !formData.tags.includes(currentTag.trim())) {
-      setFormData({ ...formData, tags: [...formData.tags, currentTag.trim()] })
-      setCurrentTag('')
-    }
-  }
-
-  const removeTag = (tag: string) => {
-    setFormData({ ...formData, tags: formData.tags.filter((t: string) => t !== tag) })
-  }
-
-  const handleUpdate = () => {
-    if (formData.name.trim()) {
-      onUpdate(list.id, formData)
-      setOpen(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          size="sm"
-          variant="outline"
-          className="hover:bg-primary/10 hover:text-primary hover:border-primary transition-all"
-        >
-          <Edit className="w-3.5 h-3.5" />
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <Edit className="w-5 h-5 text-primary" />
-            Edit Contact List
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="mt-6 space-y-4">
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
-              List Name
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
-              Tags
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                placeholder="Add tag..."
-                value={currentTag}
-                onChange={(e) => setCurrentTag(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                className="flex-1 px-4 py-2 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-              />
-              <Button onClick={addTag} size="sm">Add</Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag: string) => (
-                <Badge key={tag} variant="secondary" className="gap-1">
-                  {tag}
-                  <X className="w-3 h-3 cursor-pointer" onClick={() => removeTag(tag)} />
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          <Button
-            onClick={handleUpdate}
-            disabled={!formData.name.trim()}
-            className="w-full bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Save Changes
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 function DeleteListDialog({ list, onDelete }: any) {
   const [open, setOpen] = useState(false)
