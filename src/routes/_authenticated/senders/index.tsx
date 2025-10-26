@@ -206,6 +206,8 @@ function StatsCard({ icon, label, value, color }: any) {
     purple: 'from-purple-500/20 to-purple-500/5 text-purple-600 dark:text-purple-400',
   }
 
+  // @ts-ignore
+  // @ts-ignore
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

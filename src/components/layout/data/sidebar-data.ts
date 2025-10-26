@@ -2,17 +2,12 @@ import {
   IconChartBar,
   IconChecklist,
   IconLayoutDashboard,
-  IconLock,
-  IconLockAccess,
+
   IconMessages,
-  IconNotification,
   IconPackages,
-  IconPalette,
-  IconServerOff,
+
   IconSettings,
-  IconTool,
-  IconUserCog,
-  IconUserOff,
+
   IconUsers,
 } from '@tabler/icons-react'
 import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
@@ -54,9 +49,11 @@ export const sidebarData: SidebarData = {
       title: 'Marketing',
       items: [
         {
-          title: 'Contact Lists',
+          title: 'Audience / Contact Lists',
           url: '/contact-lists',
           icon: IconChecklist,
+          badge: '3',
+
 
         },
         { title: 'Templates', url: '/templates', icon: IconPackages },

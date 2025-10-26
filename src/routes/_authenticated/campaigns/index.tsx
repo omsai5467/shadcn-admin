@@ -1,11 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Header } from '@/components/layout/header.tsx'
-import { Search } from '@/components/search.tsx'
-import { ThemeSwitch } from '@/components/theme-switch.tsx'
-import { ProfileDropdown } from '@/components/profile-dropdown.tsx'
-import { Main } from '@/components/layout/main'
-import UsersProvider from '@/features/users/context/users-context.tsx'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Send, Calendar, Trash2, Edit, Eye, Mail, Users, TrendingUp, Clock, CheckCircle2, XCircle, AlertCircle, BarChart3, MousePointer, AlertTriangle, Play, Pause, Copy, LayoutGrid, List as ListIcon, FileText, Target, Zap, PieChart, ArrowUpRight, ArrowDownRight, Activity, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,39 +12,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import {
-  Plus,
-  Send,
-  Calendar,
-  Trash2,
-  Edit,
-  Eye,
-  Mail,
-  Users,
-  TrendingUp,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  BarChart3,
-  MousePointer,
-  AlertTriangle,
-  Play,
-  Pause,
-  Copy,
-  LayoutGrid,
-  List as ListIcon,
-  FileText,
-  Target,
-  Zap,
-  PieChart,
-  ArrowUpRight,
-  ArrowDownRight,
-  Activity
-} from 'lucide-react'
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Header } from '@/components/layout/header.tsx'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown.tsx'
+import { Search } from '@/components/search.tsx'
+import { ThemeSwitch } from '@/components/theme-switch.tsx'
+import UsersProvider from '@/features/users/context/users-context.tsx'
+
 
 export const Route = createFileRoute('/_authenticated/campaigns/')({
   component: RouteComponent,
@@ -734,145 +706,884 @@ function CampaignAnalytics({ campaign, onBack }: any) {
       </div>
 
       {/* Engagement Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2"></div>
-      {/* Engagement Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-        <MetricCard
-          icon={<AlertCircle className="w-5 h-5" />}
-          label="Bounced"
-          value={campaign.bounced.toLocaleString()}
-          subValue={`${campaign.bounceRate.toFixed(2)}% bounce rate`}
-          color="red"
-          trend="down"
-        />
-        <MetricCard
-          icon={<XCircle className="w-5 h-5" />}
-          label="Unsubscribed"
-          value={campaign.unsubscribed.toLocaleString()}
-          subValue={`${campaign.unsubRate.toFixed(2)}%`}
-          color="gray"
-          trend="down"
-        />
-        <MetricCard
-          icon={<AlertTriangle className="w-5 h-5" />}
-          label="Marked Spam"
-          value={campaign.spam.toLocaleString()}
-          subValue={`${((campaign.spam / campaign.sent) * 100).toFixed(2)}%`}
-          color="amber"
-          trend="down"
-        />
-      </div>
-
-      {/* Timeline / Scheduled Info */}
-      {campaign.scheduled && (
-        <div className="mb-8 p-4 bg-muted/20 rounded-xl border border-border">
-          <h4 className="text-sm font-semibold text-foreground mb-2">Scheduled Send</h4>
-          <p className="text-sm text-muted-foreground">
-            {new Date(campaign.scheduled).toLocaleString()}
-          </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Engagement Funnel */}
+        <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            Engagement Funnel
+          </h3>
+          <div className="space-y-4">
+            <FunnelItem label="Sent" value={campaign.sent} total={campaign.sent} color="blue" />
+            <FunnelItem label="Delivered" value={campaign.delivered} total={campaign.sent} color="green" />
+            <FunnelItem label="Opened" value={campaign.opened} total={campaign.sent} color="purple" />
+            <FunnelItem label="Clicked" value={campaign.clicked} total={campaign.sent} color="orange" />
+          </div>
         </div>
-      )}
 
-      {/* Optional Charts */}
-      <div className="mb-8 p-4 bg-card border border-border rounded-xl shadow-sm">
-        <h4 className="text-lg font-semibold text-foreground mb-4">Engagement Chart</h4>
-        <p className="text-sm text-muted-foreground">(You can integrate chart library here like Chart.js, Recharts, or ApexCharts)</p>
+        {/* Issues & Problems */}
+        <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            Issues & Problems
+          </h3>
+          <div className="space-y-4">
+            <IssueItem
+              icon={<XCircle className="w-5 h-5 text-red-500" />}
+              label="Bounced"
+              value={campaign.bounced}
+              percentage={campaign.bounceRate}
+              color="red"
+            />
+            <IssueItem
+              icon={<AlertCircle className="w-5 h-5 text-amber-500" />}
+              label="Spam Reports"
+              value={campaign.spam}
+              percentage={((campaign.spam / campaign.sent) * 100).toFixed(2)}
+              color="amber"
+            />
+            <IssueItem
+              icon={<Users className="w-5 h-5 text-gray-500" />}
+              label="Unsubscribed"
+              value={campaign.unsubscribed}
+              percentage={campaign.unsubRate}
+              color="gray"
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-2">
-        {campaign.status === 'draft' && (
-          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-            <Send className="w-4 h-4 mr-2" />
-            Send Campaign
-          </Button>
-        )}
-        {campaign.status === 'scheduled' && (
-          <Button size="sm" variant="outline">
-            <Edit className="w-4 h-4 mr-2" />
-            Reschedule
-          </Button>
-        )}
-        <Button size="sm" variant="ghost" onClick={onBack}>
-          <ArrowUpRight className="w-4 h-4 mr-2 rotate-180" />
-          Back
-        </Button>
+      {/* Additional Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+          <h4 className="text-sm font-semibold text-muted-foreground mb-4">Campaign Details</h4>
+          <div className="space-y-3">
+            <DetailRow label="Sender" value={campaign.sender} />
+            <DetailRow label="Contact List" value={campaign.contactList} />
+            <DetailRow label="Created" value={campaign.createdAt} />
+            {campaign.sentAt && <DetailRow label="Sent At" value={new Date(campaign.sentAt).toLocaleString()} />}
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+          <h4 className="text-sm font-semibold text-muted-foreground mb-4">Performance Metrics</h4>
+          <div className="space-y-3">
+            <DetailRow
+              label="Unique Opens"
+              value={`${campaign.opened.toLocaleString()} (${campaign.openRate.toFixed(2)}%)`}
+            />
+            <DetailRow
+              label="Unique Clicks"
+              value={`${campaign.clicked.toLocaleString()} (${campaign.clickRate.toFixed(2)}%)`}
+            />
+            <DetailRow
+              label="Click-to-Open Rate"
+              value={`${((campaign.clicked / campaign.opened) * 100).toFixed(2)}%`}
+            />
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+          <h4 className="text-sm font-semibold text-muted-foreground mb-4">Deliverability</h4>
+          <div className="space-y-3">
+            <DetailRow
+              label="Delivery Rate"
+              value={`${((campaign.delivered / campaign.sent) * 100).toFixed(2)}%`}
+            />
+            <DetailRow
+              label="Bounce Rate"
+              value={`${campaign.bounceRate.toFixed(2)}%`}
+            />
+            <DetailRow
+              label="Unsub Rate"
+              value={`${campaign.unsubRate.toFixed(2)}%`}
+            />
+          </div>
+        </div>
       </div>
     </motion.div>
   )
 }
 
-// MetricCard Component
 function MetricCard({ icon, label, value, subValue, color, trend }: any) {
-  const trendIcon = trend === 'up' ? ArrowUpRight : trend === 'down' ? ArrowDownRight : null
-
-  const colorClasses: any = {
-    blue: 'text-blue-600 dark:text-blue-400',
-    green: 'text-emerald-600 dark:text-emerald-400',
-    purple: 'text-purple-600 dark:text-purple-400',
-    orange: 'text-orange-600 dark:text-orange-400',
-    red: 'text-red-600 dark:text-red-400',
-    gray: 'text-gray-600 dark:text-gray-400',
-    amber: 'text-amber-600 dark:text-amber-400',
+  const colorClasses = {
+    blue: 'from-blue-500/20 to-blue-500/5 text-blue-600 dark:text-blue-400',
+    green: 'from-emerald-500/20 to-emerald-500/5 text-emerald-600 dark:text-emerald-400',
+    purple: 'from-purple-500/20 to-purple-500/5 text-purple-600 dark:text-purple-400',
+    orange: 'from-orange-500/20 to-orange-500/5 text-orange-600 dark:text-orange-400',
   }
 
   return (
-    <div className="relative bg-card border border-border rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          {icon}
-          <p className="text-sm text-muted-foreground">{label}</p>
+    <div className="relative overflow-hidden bg-card border border-border rounded-xl p-6 shadow-md">
+      <div className={`absolute inset-0 bg-gradient-to-br ${colorClasses[color]} opacity-50`} />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-3">
+          <div className={`p-2 rounded-lg bg-gradient-to-br ${colorClasses[color]}`}>
+            {icon}
+          </div>
+          {trend && (
+            <div className={`flex items-center gap-1 text-xs font-semibold ${trend === 'up' ? 'text-emerald-600' : 'text-red-600'}`}>
+              {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+            </div>
+          )}
         </div>
-        {trendIcon && <trendIcon className={`w-4 h-4 ${colorClasses[color]}`} />}
+        <p className="text-sm text-muted-foreground mb-1">{label}</p>
+        <p className="text-3xl font-bold text-foreground mb-1">{value}</p>
+        <p className="text-xs text-muted-foreground">{subValue}</p>
       </div>
-      <p className={`text-2xl font-bold ${colorClasses[color]}`}>{value}</p>
-      {subValue && <p className="text-xs text-muted-foreground mt-1">{subValue}</p>}
     </div>
   )
 }
 
-// DeleteCampaignDialog Component
-function DeleteCampaignDialog({ campaign, onDelete }: any) {
+function FunnelItem({ label, value, total, color }: any) {
+  const percentage = ((value / total) * 100).toFixed(1)
+  const colorClasses = {
+    blue: 'bg-blue-500',
+    green: 'bg-emerald-500',
+    purple: 'bg-purple-500',
+    orange: 'bg-orange-500',
+  }
+
   return (
-    <Dialog>
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-foreground">{label}</span>
+        <span className="text-sm font-bold text-foreground">{value.toLocaleString()} ({percentage}%)</span>
+      </div>
+      <div className="bg-muted rounded-full h-3 overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className={`${colorClasses[color]} h-3 rounded-full`}
+        />
+      </div>
+    </div>
+  )
+}
+
+function IssueItem({ icon, label, value, percentage, color }: any) {
+  const colorClasses = {
+    red: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/30',
+    amber: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30',
+    gray: 'text-gray-600 dark:text-gray-400 bg-gray-500/10 border-gray-500/30',
+  }
+
+  return (
+    <div className={`flex items-center justify-between p-4 rounded-lg border ${colorClasses[color]}`}>
+      <div className="flex items-center gap-3">
+        {icon}
+        <div>
+          <p className="text-sm font-medium text-foreground">{label}</p>
+          <p className={`text-xs ${colorClasses[color]}`}>{percentage}% of sent</p>
+        </div>
+      </div>
+      <p className="text-2xl font-bold text-foreground">{value}</p>
+    </div>
+  )
+}
+
+function DetailRow({ label, value }: any) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-sm font-semibold text-foreground">{value}</span>
+    </div>
+  )
+}
+
+function CreateCampaignDialog() {
+  const [open, setOpen] = useState(false)
+  const [step, setStep] = useState(1)
+  const [formData, setFormData] = useState({
+    name: '',
+    subject: '',
+    sender: '',
+    contactList: '',
+    content: '',
+    previewText: '',
+  })
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
+  const [templateSearch, setTemplateSearch] = useState('')
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  if (!isFullscreen && open) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Create Campaign
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Send className="w-5 h-5 text-primary" />
+              Create Campaign
+            </DialogTitle>
+            <DialogDescription>
+              Launch the campaign builder to create your email
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6">
+            <Button
+              onClick={() => setIsFullscreen(true)}
+              className="w-full bg-primary hover:bg-primary/90"
+              size="lg"
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Open Campaign Builder
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  if (!isFullscreen) {
+    return (
+      <Button
+        size="lg"
+        onClick={() => {
+          setOpen(true)
+          setIsFullscreen(true)
+        }}
+        className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+      >
+        <Plus className="w-5 h-5 mr-2" />
+        Create Campaign
+      </Button>
+    )
+  }
+
+  const templates = [
+    { id: 1, name: 'Modern Newsletter', category: 'Newsletter', preview: '<div style="font-family: Arial; padding: 20px; background: #f5f5f5;"><div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px;"><h1 style="color: #333;">Welcome to our Newsletter</h1><p>Your content goes here...</p></div></div>' },
+    { id: 2, name: 'Product Launch', category: 'Marketing', preview: '<div style="font-family: Arial; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px;"><h1 style="color: #667eea;">Introducing Our New Product</h1><p style="color: #666;">Get ready for something amazing...</p></div></div>' },
+    { id: 3, name: 'Promotional Sale', category: 'Marketing', preview: '<div style="font-family: Arial; padding: 20px; background: #fff;"><div style="max-width: 600px; margin: 0 auto; border: 3px solid #ff6b6b; padding: 30px;"><h1 style="color: #ff6b6b; text-align: center;">50% OFF EVERYTHING!</h1><p style="text-align: center;">Limited time offer...</p></div></div>' },
+    { id: 4, name: 'Minimalist Design', category: 'Newsletter', preview: '<div style="font-family: Georgia; padding: 40px; background: #fff;"><div style="max-width: 500px; margin: 0 auto;"><h2 style="font-weight: 300; color: #000;">Clean & Simple</h2><p style="line-height: 1.8; color: #555;">Elegant content design...</p></div></div>' },
+  ]
+
+  const filteredTemplates = templates.filter(t =>
+    t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
+    t.category.toLowerCase().includes(templateSearch.toLowerCase())
+  )
+
+  const handleTemplateSelect = (template: any) => {
+    setFormData({ ...formData, content: template.preview })
+    setStep(3)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="hover:bg-red-100 text-red-600 border-red-500">
+        <Button
+          size="lg"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Create Campaign
+        </Button>
+      </DialogTrigger>
+
+      {/* Fullscreen Overlay */}
+      <AnimatePresence>
+        {isFullscreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-background"
+          >
+            <div className="flex h-full">
+              {/* Sidebar - Steps */}
+              <div className="w-64 bg-muted/30 border-r border-border p-6 flex flex-col">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold">New Campaign</h2>
+                </div>
+
+                <div className="space-y-2 flex-1">
+                  <StepItem
+                    number={1}
+                    title="Basic Info"
+                    active={step === 1}
+                    completed={step > 1}
+                    onClick={() => setStep(1)}
+                  />
+                  <StepItem
+                    number={2}
+                    title="Choose Template"
+                    active={step === 2}
+                    completed={step > 2}
+                    onClick={() => setStep(2)}
+                  />
+                  <StepItem
+                    number={3}
+                    title="Design Email"
+                    active={step === 3}
+                    completed={step > 3}
+                    onClick={() => setStep(3)}
+                  />
+                  <StepItem
+                    number={4}
+                    title="Review & Send"
+                    active={step === 4}
+                    completed={false}
+                    onClick={() => setStep(4)}
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsFullscreen(false)
+                    setOpen(false)
+                  }}
+                  className="w-full mt-6"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Close Builder
+                </Button>
+              </div>
+
+              {/* Main Content */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Step 1: Basic Info */}
+                {step === 1 && (
+                  <div className="flex-1 overflow-y-auto p-8">
+                    <h3 className="text-2xl font-bold mb-6">Campaign Details</h3>
+                    <div className="max-w-2xl space-y-6">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          Campaign Name *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g., Black Friday Sale 2024"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Internal name for your reference</p>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          Email Subject *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="🔥 Don't miss our biggest sale of the year!"
+                          value={formData.subject}
+                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                          className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          Preview Text (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="This appears next to the subject in inbox..."
+                          value={formData.previewText}
+                          onChange={(e) => setFormData({ ...formData, previewText: e.target.value })}
+                          className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">
+                            From Email *
+                          </label>
+                          <select
+                            value={formData.sender}
+                            onChange={(e) => setFormData({ ...formData, sender: e.target.value })}
+                            className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                          >
+                            <option value="">Select sender...</option>
+                            <option value="hello@example.com">hello@example.com</option>
+                            <option value="support@example.com">support@example.com</option>
+                            <option value="newsletter@example.com">newsletter@example.com</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">
+                            Contact List *
+                          </label>
+                          <select
+                            value={formData.contactList}
+                            onChange={(e) => setFormData({ ...formData, contactList: e.target.value })}
+                            className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                          >
+                            <option value="">Select list...</option>
+                            <option value="Newsletter Subscribers">Newsletter Subscribers (15,420)</option>
+                            <option value="Product Launch List">Product Launch List (8,934)</option>
+                            <option value="Beta Testers">Beta Testers (542)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => setStep(2)}
+                        disabled={!formData.name || !formData.subject || !formData.sender || !formData.contactList}
+                        className="w-full bg-primary hover:bg-primary/90 mt-8"
+                        size="lg"
+                      >
+                        Continue to Templates
+                        <ArrowUpRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Template Selection */}
+                {step === 2 && (
+                  <div className="flex-1 overflow-y-auto p-8">
+                    <h3 className="text-2xl font-bold mb-6">Campaign Details</h3>
+                    <div className="max-w-2xl space-y-6">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          Campaign Name *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g., Black Friday Sale 2024"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Internal name for your reference</p>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          Email Subject *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="🔥 Don't miss our biggest sale of the year!"
+                          value={formData.subject}
+                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                          className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          Preview Text (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="This appears next to the subject in inbox..."
+                          value={formData.previewText}
+                          onChange={(e) => setFormData({ ...formData, previewText: e.target.value })}
+                          className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">
+                            From Email *
+                          </label>
+                          <select
+                            value={formData.sender}
+                            onChange={(e) => setFormData({ ...formData, sender: e.target.value })}
+                            className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                          >
+                            <option value="">Select sender...</option>
+                            <option value="hello@example.com">hello@example.com</option>
+                            <option value="support@example.com">support@example.com</option>
+                            <option value="newsletter@example.com">newsletter@example.com</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">
+                            Contact List *
+                          </label>
+                          <select
+                            value={formData.contactList}
+                            onChange={(e) => setFormData({ ...formData, contactList: e.target.value })}
+                            className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                          >
+                            <option value="">Select list...</option>
+                            <option value="Newsletter Subscribers">Newsletter Subscribers (15,420)</option>
+                            <option value="Product Launch List">Product Launch List (8,934)</option>
+                            <option value="Beta Testers">Beta Testers (542)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => setStep(2)}
+                        disabled={!formData.name || !formData.subject || !formData.sender || !formData.contactList}
+                        className="w-full bg-primary hover:bg-primary/90 mt-8"
+                        size="lg"
+                      >
+                        Continue to Templates
+                        <ArrowUpRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Template Selection */}
+                {step === 2 && (
+                  <div className="flex-1 overflow-y-auto p-8">
+                    <div className="mb-6">
+                      <h3 className="text-2xl font-bold mb-2">Choose a Template</h3>
+                      <p className="text-muted-foreground">Start with a professional template or build from scratch</p>
+                    </div>
+
+                    <div className="mb-6">
+                      <input
+                        type="text"
+                        placeholder="Search templates..."
+                        value={templateSearch}
+                        onChange={(e) => setTemplateSearch(e.target.value)}
+                        className="w-full max-w-md px-4 py-3 bg-muted/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {/* Blank Template */}
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        className="border-2 border-dashed border-border rounded-xl p-8 cursor-pointer hover:border-primary transition-all bg-card"
+                        onClick={() => setStep(3)}
+                      >
+                        <div className="text-center">
+                          <Plus className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                          <h4 className="font-semibold mb-2">Start from Scratch</h4>
+                          <p className="text-sm text-muted-foreground">Build your own custom design</p>
+                        </div>
+                      </motion.div>
+
+                      {/* Template Cards */}
+                      {filteredTemplates.map((template, index) => (
+                        <motion.div
+                          key={template.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          whileHover={{ scale: 1.02 }}
+                          className="border border-border rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all bg-card"
+                          onClick={() => handleTemplateSelect(template)}
+                        >
+                          <div className="h-48 bg-muted flex items-center justify-center p-4 overflow-hidden">
+                            <div
+                              className="scale-50 origin-top-left w-[200%]"
+                              dangerouslySetInnerHTML={{ __html: template.preview }}
+                            />
+                          </div>
+                          <div className="p-4">
+                            <h4 className="font-semibold mb-1">{template.name}</h4>
+                            <Badge variant="secondary" className="text-xs">{template.category}</Badge>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Email Editor */}
+                {step === 3 && (
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    {/* Editor Toolbar */}
+                    <div className="border-b border-border p-4 flex items-center justify-between bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline">
+                          <FileText className="w-4 h-4 mr-2" />
+                          Import HTML
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Copy className="w-4 h-4 mr-2" />
+                          Export
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground mr-2">Preview:</span>
+                        <div className="flex items-center bg-muted rounded-lg p-1">
+                          <Button
+                            size="sm"
+                            variant={previewMode === 'desktop' ? 'default' : 'ghost'}
+                            onClick={() => setPreviewMode('desktop')}
+                            className="px-3"
+                          >
+                            Desktop
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={previewMode === 'mobile' ? 'default' : 'ghost'}
+                            onClick={() => setPreviewMode('mobile')}
+                            className="px-3"
+                          >
+                            Mobile
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex overflow-hidden">
+                      {/* HTML Editor Side */}
+                      <div className="w-1/2 border-r border-border flex flex-col">
+                        <div className="p-4 border-b border-border bg-muted/20">
+                          <h4 className="font-semibold">HTML Editor</h4>
+                          <p className="text-xs text-muted-foreground">Edit your email HTML code</p>
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                      <textarea
+                        value={formData.content}
+                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                        className="w-full h-full p-4 bg-background border-0 focus:outline-none focus:ring-0 font-mono text-sm resize-none"
+                        placeholder="<html>&#10;  <body>&#10;    <h1>Your email content here...</h1>&#10;    <p>Start typing or paste your HTML</p>&#10;  </body>&#10;</html>"
+                      />
+                        </div>
+                      </div>
+
+                      {/* Preview Side */}
+                      <div className="w-1/2 flex flex-col bg-muted/10">
+                        <div className="p-4 border-b border-border bg-muted/20">
+                          <h4 className="font-semibold">Live Preview</h4>
+                          <p className="text-xs text-muted-foreground">See how your email looks</p>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-8 flex items-start justify-center">
+                          <motion.div
+                            key={previewMode}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`bg-white shadow-2xl ${
+                              previewMode === 'mobile' ? 'w-[375px]' : 'w-full max-w-[600px]'
+                            } transition-all duration-300`}
+                          >
+                            {/* Email Preview Header */}
+                            <div className="border-b border-gray-200 p-4 bg-gray-50">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                                  <Mail className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm text-gray-900">{formData.sender || 'sender@example.com'}</p>
+                                  <p className="text-xs text-gray-500 truncate">to: recipient@example.com</p>
+                                </div>
+                              </div>
+                              <h3 className="font-bold text-gray-900">{formData.subject || 'Email Subject'}</h3>
+                              {formData.previewText && (
+                                <p className="text-sm text-gray-600 mt-1">{formData.previewText}</p>
+                              )}
+                            </div>
+
+                            {/* Email Content */}
+                            <div
+                              className="p-4"
+                              dangerouslySetInnerHTML={{
+                                __html: formData.content || '<p style="color: #999; text-align: center; padding: 40px;">Your email preview will appear here...</p>'
+                              }}
+                            />
+                          </motion.div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Actions */}
+                    <div className="border-t border-border p-4 flex justify-between bg-muted/30">
+                      <Button variant="outline" onClick={() => setStep(2)}>
+                        <ArrowUpRight className="w-4 h-4 mr-2 rotate-180" />
+                        Back to Templates
+                      </Button>
+                      <Button
+                        onClick={() => setStep(4)}
+                        disabled={!formData.content}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        Continue to Review
+                        <ArrowUpRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 4: Review & Send */}
+                {step === 4 && (
+                  <div className="flex-1 overflow-y-auto p-8">
+                    <h3 className="text-2xl font-bold mb-6">Review & Send</h3>
+
+                    <div className="max-w-4xl space-y-6">
+                      {/* Campaign Summary */}
+                      <div className="bg-card border border-border rounded-xl p-6">
+                        <h4 className="font-semibold mb-4">Campaign Summary</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <DetailRow label="Campaign Name" value={formData.name} />
+                          <DetailRow label="Subject Line" value={formData.subject} />
+                          <DetailRow label="From Email" value={formData.sender} />
+                          <DetailRow label="Contact List" value={formData.contactList} />
+                          {formData.previewText && <DetailRow label="Preview Text" value={formData.previewText} />}
+                        </div>
+                      </div>
+
+                      {/* Final Preview */}
+                      <div className="bg-card border border-border rounded-xl p-6">
+                        <h4 className="font-semibold mb-4">Final Email Preview</h4>
+                        <div className="bg-muted/30 rounded-lg p-4 max-h-96 overflow-y-auto">
+                          <div
+                            className="bg-white max-w-[600px] mx-auto"
+                            dangerouslySetInnerHTML={{ __html: formData.content }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Send Options */}
+                      <div className="flex gap-4">
+                        <Button
+                          size="lg"
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          <Send className="w-5 h-5 mr-2" />
+                          Send Now
+                        </Button>
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          <Clock className="w-5 h-5 mr-2" />
+                          Schedule Send
+                        </Button>
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          <FileText className="w-5 h-5 mr-2" />
+                          Save as Draft
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Dialog>
+  )
+}
+
+function StepItem({ number, title, active, completed, onClick }: any) {
+  return (
+    <motion.div
+      whileHover={{ x: 4 }}
+      onClick={onClick}
+      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+        active ? 'bg-primary text-primary-foreground' : completed ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'hover:bg-muted'
+      }`}
+    >
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+        active ? 'bg-primary-foreground text-primary' : completed ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'
+      }`}>
+        {completed ? <CheckCircle2 className="w-5 h-5" /> : number}
+      </div>
+      <span className="font-medium">{title}</span>
+    </motion.div>
+  )
+}
+
+function DeleteCampaignDialog({ campaign, onDelete }: any) {
+  const [open, setOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDelete = () => {
+    setIsDeleting(true)
+    setTimeout(() => {
+      onDelete(campaign.id)
+      setIsDeleting(false)
+      setOpen(false)
+    }, 600)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive transition-all"
+        >
           <Trash2 className="w-3.5 h-3.5" />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Delete Campaign</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete "{campaign.name}"? This action cannot be undone.
+          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-destructive" />
+            Delete Campaign
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            This action cannot be undone
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-4 flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onDelete(campaign.id)}>Delete</Button>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-lg"
+        >
+          <p className="text-sm text-foreground mb-2">
+            Are you sure you want to delete this campaign?
+          </p>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <p><strong>Name:</strong> {campaign.name}</p>
+            <p><strong>Status:</strong> {campaign.status}</p>
+            <p><strong>Recipients:</strong> {campaign.totalRecipients.toLocaleString()}</p>
+          </div>
+        </motion.div>
+
+        <div className="mt-6 flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={isDeleting}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex-1"
+          >
+            {isDeleting ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="mr-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </motion.div>
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Campaign
+              </>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
   )
 }
-
-// Placeholder CreateCampaignDialog
-function CreateCampaignDialog() {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button size="sm" className="bg-primary hover:bg-primary/90 flex items-center gap-2">
-          <Plus className="w-4 h-4" /> New Campaign
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create New Campaign</DialogTitle>
-          <DialogDescription>
-            Enter campaign details here...
-          </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
