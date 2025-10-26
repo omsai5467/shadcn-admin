@@ -14,6 +14,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build:{
+    sourcemap: false,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -22,5 +25,8 @@ export default defineConfig({
       // https://github.com/tabler/tabler-icons/issues/1233
       '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
     },
+  },
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' },
   },
 })
